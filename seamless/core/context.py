@@ -17,6 +17,11 @@ class PrintableList(list):
         return str([v.format_path() for v in self])
 
 def set_active_context(ctx):
+    ##JUPYTER TEST
+    from IPython import get_ipython
+    ipython = get_ipython()
+    if ipython is not None:
+      ipython.run_line_magic('gui', 'seamless')
     global _active_context
     assert ctx is None or isinstance(ctx, Context)
     _active_context = ctx
