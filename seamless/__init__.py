@@ -157,14 +157,19 @@ else:
         qt_error = "Seamless was not imported inside IPython"
     else:
         try:
-            ipython.enable_gui("qt5")
+            #ipython.enable_gui("qt5") ### DISABLE JUPYTER TEST
+            pass
         except UsageError:
             qt_error = "Your IPython is too old to support qt5"
         except ImportError:
             qt_error = "Cannot find PyQt5 (requires PyQt5.QtCore, .QtGui, .QtSvg, .QtWidgets)"
 
 
+# JUPYTER TEST! Disables Qt completely
+
+
 if qt_error is None:
+    '''
     import PyQt5.QtWidgets
     import PyQt5.QtWebEngineWidgets
     from PyQt5 import QtGui, QtCore
@@ -203,17 +208,35 @@ if qt_error is None:
 
     def mainloop():
         raise RuntimeError("Cannot run seamless.mainloop() in IPython mode")
+    '''
+    from ipykernel.eventloops import register_integration
 
+    @register_integration('seamless')
+    def seamless_mainloop(kernel):
+        while 1:
+            kernel.do_one_iteration()
+            run_work()
+            time.sleep(FAILSAFE_WORK_LATENCY/1000)
+
+    def inputhook(context):
+        while not context.input_is_ready():
+            run_work()
+            time.sleep(FAILSAFE_WORK_LATENCY/1000)
+    import IPython.terminal.pt_inputhooks
+    IPython.terminal.pt_inputhooks.register("seamless", inputhook)
+    sys.meta_path.append(SeamlessMockImporter("seamless.qt"))
 else:
     sys.stderr.write("    " + qt_error + "\n")
     sys.stderr.write("    All GUI in seamless.qt has been disabled\n")
     sys.stderr.write("    Call seamless.mainloop() to process cell updates\n")
     sys.meta_path.append(SeamlessMockImporter("seamless.qt"))
 
+
     def mainloop():
         while 1:
             run_work()
             time.sleep(FAILSAFE_WORK_LATENCY/1000)
+
 
 ## GL related stuff... put this into its own file as soon as the API is stable
 _opengl_contexts = []
@@ -301,6 +324,9 @@ def export(pin, dtype=None):
         pin.connect(c)
     return c
 
+#JUPYTER TEST
+def run_qt():
+    pass
 
 from . import qt
 from .gui import shell
