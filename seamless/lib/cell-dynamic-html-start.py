@@ -1,4 +1,5 @@
 import jinja2
+from urllib.parse import urlsplit, urlunsplit
 
 params = PINS.DYNAMIC_HTML_PARAMS.get()
 tmpl = PINS.DYNAMIC_HTML_TEMPLATE.get()
@@ -22,8 +23,30 @@ dynamic_html0 = jinja2.Template(tmpl).render(
 from seamless.websocketserver import websocketserver
 websocketserver.start() #no-op if the websocketserver has already started
 
+public_address = websocketserver.public_address
+websocketserver_uri_tuple0 = urlsplit( public_address)
+if not websocketserver_uri_tuple0.netloc:
+    websocketserver_uri_tuple0 = urlsplit("http://" + public_address.lstrip("/"))
+port = websocketserver.public_port
+if port is None:
+    try:
+        port = websocketserver_uri_tuple0.port
+    except ValueError:
+        pass
+    if port is None:
+        port = ''
+netloc = websocketserver_uri_tuple0.netloc
+if port and port != 80:
+    netloc = netloc + ":" + str(port)
+websocketserver_uri_tuple = ("ws", netloc,
+  websocketserver_uri_tuple0.path,
+  websocketserver_uri_tuple0.query,
+  websocketserver_uri_tuple0.fragment
+ )
+websocketserver_uri = urlunsplit(websocketserver_uri_tuple)
 dynamic_html = jinja2.Template(dynamic_html0).render({
     "IDENTIFIER": IDENTIFIER,
+    "WEBSOCKETSERVER_URI": websocketserver_uri,
     "WEBSOCKETSERVER_ADDRESS": websocketserver.public_address,
     "WEBSOCKETSERVER_PORT": websocketserver.public_port,
 })

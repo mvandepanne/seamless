@@ -2,7 +2,7 @@
 {% for var in vars_full %}
     var {{var}} = null;
 {% endfor %}
-    var ws = new WebSocket("ws://{% raw %}{{WEBSOCKETSERVER_ADDRESS}}{% endraw %}:{% raw %}{{WEBSOCKETSERVER_PORT}}{% endraw %}/");
+    var ws = new WebSocket("{% raw %}{{WEBSOCKETSERVER_URI}}{% endraw %}/");
     ws.onopen = function () {
         ws.send("{% raw %}{{IDENTIFIER}}{% endraw %}");
     }
